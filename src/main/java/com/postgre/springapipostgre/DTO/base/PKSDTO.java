@@ -1,5 +1,7 @@
 package com.postgre.springapipostgre.DTO.base;
 
+import com.postgre.springapipostgre.models.User;
+
 import java.util.List;
 
 public class PKSDTO {
@@ -8,6 +10,7 @@ public class PKSDTO {
     private String budgetType;
     private String budgetNumber;
     private String partnershipMethod;
+    private Long userId;
     private String materialType;
     private String title;
     private String background;
@@ -25,6 +28,14 @@ public class PKSDTO {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public Long getUserId() {
+        return userId;
     }
 
     public String getPartnershipType() {

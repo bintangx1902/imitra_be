@@ -12,12 +12,13 @@ public class ConvertToDTO {
     public static List<MouNdaDTO> toMouNdaDTO(List<MouNda> mouNdaList) {
         return mouNdaList.stream().map(mouNda -> {
             MouNdaDTO dto = new MouNdaDTO();
-            dto.setId(mouNda.getId());
+//            dto.setId(mouNda.getId());
             dto.setPartnershipTitle(mouNda.getPartnershipTitle());
             dto.setBackground(mouNda.getBackground());
             dto.setNote(mouNda.getNote());
             dto.setPartnershipCandidate(mouNda.getPartnershipCandidate());
             dto.setStatus(mouNda.getStatus().toString());
+            dto.setUserId(mouNda.getUser().getId());
 
             return dto;
         }).collect(Collectors.toList());
@@ -26,12 +27,13 @@ public class ConvertToDTO {
     public static List<PKSDTO> toPksDTO(List<PKS> pksList) {
         return pksList.stream().map(pks -> {
             PKSDTO dto = new PKSDTO();
-            dto.setId(pks.getId());
+//            dto.setId(pks.getId());
             dto.setTitle(pks.getTitle());
             dto.setBackground(pks.getBackground());
             dto.setNote(pks.getNote());
             dto.setPartnershipCandidate(pks.getPartnershipCandidate());
             dto.setStatus(pks.getStatus().toString());
+            dto.setUserId(pks.getUser().getId());
 
             return dto;
         }).collect(Collectors.toList());

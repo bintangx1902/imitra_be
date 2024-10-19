@@ -8,6 +8,7 @@ public class RabDTO {
     private long revenue;
     private long cost;
     private String costDesc;
+    private String type;
     private Long pksId; // Optional: You can keep the PKS ID for reference
 
     // Getters and Setters
@@ -17,6 +18,14 @@ public class RabDTO {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getType() {
+        return type;
     }
 
     public String getCustomer() {

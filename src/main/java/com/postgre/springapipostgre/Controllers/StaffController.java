@@ -16,8 +16,9 @@ import java.util.List;
 @RequestMapping("/api/staff")
 public class StaffController {
     @Autowired
-    private StaffServive staffService;
+    private StaffService staffService;
 
+    // endpoint create Mou/Nda
     @PostMapping("/create-mou-nda")
     public ResponseEntity<MouNda> createMouNda(
             @ModelAttribute MouNdaDTO mouNdaDTO,
@@ -25,6 +26,22 @@ public class StaffController {
 
         MouNda createdMouNda = staffService.createMouNda(mouNdaDTO, attachments).getBody();
         return new ResponseEntity<>(createdMouNda, HttpStatus.CREATED);
+    }
+
+    // endpoint create PKS
+    @PostMapping("/create-pks")
+    public ResponseEntity<PKS> createPKS(
+            @ModelAttribute PKSDTO pksdto,
+            @RequestParam("attachments") List<MultipartFile> attachments) throws IOException {
+
+        try {
+            PKS createPks = staffService.createPks(pksdto, attachments).getBody();
+            return new ResponseEntity<>(createPks, HttpStatus.CREATED);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("file upload failed" + e.getMessage());
+            //            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed: " + e.getMessage());
+        }
+//        return new ResponseEntity<>(createPks, HttpStatus.CREATED);
     }
 
     // Endpoint untuk mengambil daftar MouNda berdasarkan filter
@@ -38,12 +55,21 @@ public class StaffController {
     }
 
     // Endpoint untuk mengambil daftar PKS berdasarkan filter
-    @GetMapping("/pks")
+    @GetMapping("/pkses")
     public ResponseEntity<List<PKSDTO>> getAllPKS(
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String date) {
 
         List<PKSDTO> pksList = staffService.getAllPKS(type, date);
         return ResponseEntity.ok(pksList);
+    }
+
+    @GetMapping("/moundas/dashboard")
+    public ResponseEntity<List<MouNdaDTO>> getAllMouNdaDashboard(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status) {
+
+        List<MouNdaDTO> mouNdaDTOList = staffService.dashboardMouNda(type, status);
+        return ResponseEntity.ok(mouNdaDTOList);
     }
 }

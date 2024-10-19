@@ -1,6 +1,8 @@
 package com.postgre.springapipostgre.Services;
 
-import com.postgre.springapipostgre.models.MouNda;
+import com.postgre.springapipostgre.models.*;
+import com.postgre.springapipostgre.utils.*;
+import com.postgre.springapipostgre.utils.FileControl.FileNameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,19 +11,18 @@ import com.postgre.springapipostgre.DTO.base.*;
 import com.postgre.springapipostgre.Repositories.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.postgre.springapipostgre.models.enums.*;
-import com.postgre.springapipostgre.models.*;
-import com.postgre.springapipostgre.utils.ConvertToDTO;
+import com.postgre.springapipostgre.utils.*;
 
 @Service
-public class StaffServive {
+public class StaffService {
     @Autowired
     private MouNdaRepository mouNdaRepository;
 
@@ -35,19 +36,10 @@ public class StaffServive {
     private ScopeRepository scopeRepository;
 
     @Autowired
-    AttachmentRepository attachmentRepository;
+    private AttachmentRepository attachmentRepository;
 
-    public void saveFile(MultipartFile file, String dir_target) throws IOException {
-        String uploadDir = "media/" + dir_target;
-        File directory = new File(uploadDir);
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-
-        String filePath = uploadDir + file.getOriginalFilename();
-        File dest = new File(filePath);
-        file.transferTo(dest);
-    }
+    @Autowired
+    private RabRepository rabRepository;
 
 
     // Controller create-mou-nda
@@ -86,7 +78,7 @@ public class StaffServive {
         // Simpan attachments jika ada
         if (attachments != null && !attachments.isEmpty()) {
             for (MultipartFile file : attachments) {
-                saveFile(file, "attachments/");
+                SaveFile.save(file, "attachments/");
                 Attachment attachment = new Attachment();
                 attachment.setFile(file.getOriginalFilename()); // Pastikan Anda menangani penyimpanan file di disk
                 attachment.setMouNda(mouNda); // Hubungkan dengan MouNda
@@ -95,6 +87,71 @@ public class StaffServive {
         }
         return new ResponseEntity<>(mouNda, HttpStatus.CREATED);
 
+    }
+
+    // Controller for Create PKS
+    public ResponseEntity<PKS> createPks(PKSDTO pksDto, List<MultipartFile> attachments) throws IOException {
+        PKS pks = new PKS();
+
+        if (pksDto.getUserId() == null) {
+            throw new IllegalArgumentException("User ID must not be null");
+        }
+
+        User user = userRepository.findById(pksDto.getUserId())
+                .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
+        pks.setUser(user);
+
+        pks.setTitle(pksDto.getTitle());
+        pks.setBackground(pksDto.getBackground());
+        pks.setNote(pksDto.getNote());
+
+        if (pksDto.getStatus() != null) {
+            try {
+                pks.setStatus(StatusChoices.valueOf(pksDto.getStatus()));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid status value");
+            }
+        }
+
+
+        pks = pksRepository.save(pks);
+
+        if (pksDto.getScopesPks() != null) {
+            for (ScopeDTO scopeDto : pksDto.getScopesPks()) {
+                Scope scope = new Scope();
+                scope.setScopeName(scopeDto.getScopeName());
+                scope.setPks(pks);
+                scopeRepository.save(scope);
+            }
+        }
+
+        if (pksDto.getRab() != null) {
+            for (RabDTO rabDto : pksDto.getRab()) {
+                RAB rab = new RAB();
+                rab.setCustomer(rabDto.getCustomer());
+                rab.setType(TypeChoices.valueOf(rabDto.getType()));
+                rab.setRevenue(rabDto.getRevenue());
+                rab.setCost(rabDto.getCost());
+                rab.setCostDesc(rabDto.getCostDesc());
+                rab.setPks(pks);
+
+                rabRepository.save(rab);
+            }
+        }
+
+        if (attachments != null) {
+            for (MultipartFile file : attachments) {
+                SaveFile.save(file, "pks/");
+                Attachment attachment = new Attachment();
+
+                String fileName = FileNameUtils.generateSafeFileName(Objects.requireNonNull(file.getOriginalFilename()));
+                attachment.setFile(fileName);
+                attachment.setPks(pks);
+                attachmentRepository.save(attachment);
+            }
+        }
+
+        return new ResponseEntity<>(pks, HttpStatus.CREATED);
     }
 
     // Controller for List all Mou/Nda
@@ -137,5 +194,35 @@ public class StaffServive {
             }
         }
         return ConvertToDTO.toPksDTO(PKSList);
+    }
+
+    // Controller for dashboard endpoint (mou/Nda)
+    public List<MouNdaDTO> dashboardMouNda(String type, String status) {
+        List<MouNda> mouNdaList;
+
+        if (status != null) {
+            mouNdaList = mouNdaRepository.findByStatusIn(List.of(StatusChoices.R, StatusChoices.F));
+        } else {
+            mouNdaList = mouNdaRepository.findAll();
+        }
+
+        if (type != null && (type.equals("m") || type.equals("n"))) {
+            mouNdaList = mouNdaList.stream()
+                    .filter(mouNda -> mouNda.getBase().toString().equals(type))
+                    .collect(Collectors.toList());
+        }
+        return ConvertToDTO.toMouNdaDTO(mouNdaList);
+    }
+
+    // Controller for dashboard endpoint (pks)
+    public List<PKSDTO> dashboardPKS(String type, String status) {
+        List<PKS> pksList;
+        if (status != null) {
+            pksList = pksRepository.findByStatusIn(List.of(StatusChoices.R, StatusChoices.F));
+        } else {
+            pksList = pksRepository.findAll();
+        }
+
+        return ConvertToDTO.toPksDTO(pksList);
     }
 }

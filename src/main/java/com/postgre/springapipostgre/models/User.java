@@ -37,10 +37,19 @@ public class User {
     @Column(name = "is_superuser", nullable = false)
     private boolean isSuperuser = false;
 
+    @Column(name = "is_manager", nullable = true)
     private boolean isManager = false;
+
+    @Column(name = "is_vp", nullable = true)
     private boolean isVp = false;
+
+    @Column(name = "is_director", nullable = true)
     private boolean isDirector = false;
+
+    @Column(name = "is_partnership_manager", nullable = true)
     private boolean isPartnershipManager = false;
+
+    @Column(name = "is_partnership_staff", nullable = true)
     private boolean isPartnershipStaff = false;
 
     // Constructors

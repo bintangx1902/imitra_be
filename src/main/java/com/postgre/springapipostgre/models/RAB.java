@@ -1,5 +1,6 @@
 package com.postgre.springapipostgre.models;
 
+import com.postgre.springapipostgre.models.enums.TypeChoices;
 import jakarta.persistence.*;
 
 @Entity
@@ -15,6 +16,7 @@ public class RAB {
     private long revenue;
     private long cost;
     private String costDesc;
+    private TypeChoices type;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "pks_id", nullable = true)
@@ -36,6 +38,14 @@ public class RAB {
 
     public void setCustomer(String customer) {
         this.customer = customer;
+    }
+
+    public void setType(TypeChoices type) {
+        this.type = type;
+    }
+
+    public TypeChoices getType() {
+        return this.type;
     }
 
     public String getProduct() {
